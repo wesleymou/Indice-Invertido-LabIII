@@ -6,35 +6,36 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.JOptionPane;
 
 import guj.ProgressBar;
 
 public class Indice {
-	private final int TAMANHO_INDICE = 5000;
-	private final int COLUNAS = 2;
-	private String[][] indice = new String[TAMANHO_INDICE][COLUNAS];
+	Set<String[]> indice;
 
-	public Indice (String topWords, String base) {
-		iniciarVetor(topWords);
-		criarIndiceInvertido(base);
+	public Indice (String topWords, int coluna, String regex, String banco) {
+		indice = new TreeSet<String[]>(new TreeComparator());
+		iniciarVetor(topWords, coluna, regex);
+		criarIndiceInvertido(banco);
 	}
 
-	public void iniciarVetor (String nomeArquivo) {
+	public void iniciarVetor (String nomeArquivo, int coluna, String regex) {
 		try (BufferedReader leitor = new BufferedReader(new FileReader(nomeArquivo))) {
-			int cont = 0;
-			indice[cont][0] = leitor.readLine();
+			String[] linha;
+			leitor.readLine();
 			while (leitor.ready()) {
-				indice[cont][0] = leitor.readLine();
-				cont++;
+				linha = leitor.readLine().split(regex);
+				linha = linha[coluna].split("//s");
+				for (String palavra : linha) {
+					String vetor[] = {palavra,""};
+					indice.add(vetor);
+					System.out.println(indice.size());
+				}
 			}
-			for (int i = 0; i<indice.length; i++) {
-				indice[i][1] = "";
-			}
-		} catch (FileNotFoundException e) {
-			JOptionPane.showMessageDialog(null, "File not Found!");
-			e.printStackTrace();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -42,7 +43,6 @@ public class Indice {
 	}
 
 	public void criarIndiceInvertido(String nomeArquivo) {
-
 		try (BufferedReader leitor = new BufferedReader(new FileReader(nomeArquivo))) {
 			ProgressBar progressBar = new ProgressBar();
 			int cont = 0;
@@ -50,38 +50,46 @@ public class Indice {
 			progressBar.createProgressBar();
 			leitor.readLine();
 			while (leitor.ready()) {
-				progressBar.fill((cont/TAMANHO_INDICE)*100);
-
 				linha = leitor.readLine().split(",");
 				linha = linha[1].split("\\s");
-				for (int i = 0; i < linha.length; i++) {
-					for (int j = 0; j < indice.length; j++) {
-						if (indice[j][0].equalsIgnoreCase(linha[i])) {
-							indice[j][1] += cont + ",";
+				for (String palavra : linha) {
+					for (String[] strings : indice) {
+						if (strings[0].equalsIgnoreCase(palavra)) {
+							strings[1] += ", " + cont;
 						}
 					}
 				}
-				cont++;
+//				cont++;
+				progressBar.fill((++cont*100)/16500);
 			}
 			progressBar.closeProgressBar();
 		} catch (FileNotFoundException e) {
 			JOptionPane.showMessageDialog(null, "File not Found!");
 			e.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
-
-	public void toFile(String nomeArquivo) {
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(nomeArquivo))) {
-			for (int i = 0; i < indice.length; i++) {
-				writer.write(indice[i][0] + "; " + indice[i][1] + "\n");
-			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+
+		public void toFile(String nomeArquivo) {
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(nomeArquivo))) {
+				for (String[] strings : indice) {
+					writer.write(strings[0] + strings[1] + "\n");
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+}
+
+class TreeComparator implements Comparator<String[]> {
+
+	@Override
+	public int compare(String[] arg0, String[] arg1) {
+		return arg0[0].compareToIgnoreCase(arg1[0]);
+	}
+	
 }
 
