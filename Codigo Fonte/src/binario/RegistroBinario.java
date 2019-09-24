@@ -11,46 +11,59 @@ import guj.ProgressBar;
 
 public class RegistroBinario {
 	private final int MAX_STRING;
-	private RandomAccessFile rFile;
-	private int nunReg;
-	private int tamReg;
-	private int tamHead;
+	private final int tamHead;
 
-	public RegistroBinario(String pathname) {
-		int maxString = 30;
-		File file = new File(pathname);
+	private int tamReg;
+	private int nunReg;
+	private RandomAccessFile rFile;
+
+	public RegistroBinario(String pathname, String[] struct, int maxString) {
+		int tempTamHead = 0;
+		int tempTamReg= 0;
 		try {
+			File file = new File(pathname);
+
 			if (file.exists()) {
 				rFile = new RandomAccessFile(file, "rw");
-				try {
-					//rFile.seek(0);
-					this.nunReg = rFile.readInt();
-					this.tamReg = rFile.readInt();
-					this.tamHead = rFile.readInt();
-					maxString = rFile.readInt();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				this.nunReg = rFile.readInt();
+				tempTamReg = rFile.readInt();
+				tempTamHead = rFile.readInt();
+				maxString = rFile.readInt();
 			} else {
-				this.nunReg = 0;
-				this.tamReg = 0;
-				this.tamHead = 4 * (Integer.SIZE/8);
-				maxString = 30;
 				rFile = new RandomAccessFile(file, "rw");
-				try {
-					rFile.writeInt(this.nunReg);
-					rFile.writeInt(this.tamReg);
-					rFile.writeInt(this.tamHead);
-					rFile.writeInt(maxString);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				int cont = 0;
+
+				if (struct != null) {
+					for (String word: struct) {
+						if (word.equals("int")) {
+							cont += Integer.SIZE/8;
+						} else if (word.equals("float")) {
+							cont += Float.SIZE/8;
+						}else if (word.equals("String")) {
+							cont += maxString;
+						}
+					}
 				}
+
+				this.nunReg = 0;
+				tempTamReg = cont;
+				tempTamHead = 4 * Integer.SIZE/8;
+				maxString = 30;
+
+				rFile.writeInt(this.nunReg);
+				rFile.writeInt(tempTamReg);
+				rFile.writeInt(tempTamHead);
+				rFile.writeInt(maxString);
 			}
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		this.tamReg = tempTamReg;
+		this.tamHead = tempTamHead;
 		this.MAX_STRING = maxString;
 	}
 
@@ -63,26 +76,33 @@ public class RegistroBinario {
 		return "Arquivo fechado.";
 	}
 
-	public void convertToBin (String pathname, int quantReg) {
-		ProgressBar progressBar = new ProgressBar();
-		int cont = 0;
+	public void fixedRegToBin (String pathname, String[] struct, String regex) {
 		try (BufferedReader reader = new BufferedReader(new FileReader(pathname))) {
-			progressBar.createProgressBar();
+			int cont = 0;
+			ProgressBar progressBar = new ProgressBar();
+
+			progressBar.createProgressBar(pathname);
 			while (reader.ready()) {
-				String text = reader.readLine();
-				String line[] = text.split(",");
-				if (nunReg == 0) {
-					setTamReg(line.length * MAX_STRING);
-				}
+				String line[] = reader.readLine().split(regex);
 				int pos = this.tamHead + (this.nunReg * this.tamReg);
-				for (int i = 0; i < line.length; i++) {
+
+				for (int i = 0; i < struct.length; i++) {
 					rFile.seek(pos);
-					rFile.writeUTF(limitString(line[i]));
-					pos += this.MAX_STRING;
+					if (struct[i].equals("int")) {
+						rFile.writeInt(Integer.parseInt(line[i]));
+						pos += Integer.SIZE/8;
+					} else if (struct[i].equals("float")) {
+						rFile.writeFloat(Float.parseFloat(line[i]));
+						pos += Float.SIZE/8;
+					} else if (struct[i].equals("String")) {
+						rFile.writeUTF(this.limitString(line[i]));
+						pos += this.MAX_STRING;
+					}
 				}
 				setNunReg(++cont);
-				progressBar.fill((cont*100)/quantReg);
+				progressBar.fill((cont*100)/16500);
 			}
+			progressBar.closeProgressBar();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -90,7 +110,51 @@ public class RegistroBinario {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		progressBar.closeProgressBar();
+	}
+
+	public void variableRegToBin (String pathname, String regex, int quantReg) {
+		int cont = 0;
+		if (this.tamReg == 0) {
+			try (BufferedReader reader = new BufferedReader(new FileReader(pathname))) {
+				while (reader.ready()) {
+					String string[] = reader.readLine().split(regex);
+					if (string.length > cont)
+						cont = string.length;
+				}
+				setTamReg(((cont) * Integer.SIZE/8) + MAX_STRING);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		try (BufferedReader reader = new BufferedReader(new FileReader(pathname))){
+			ProgressBar progressBar = new ProgressBar();
+			cont = 0;
+			progressBar.createProgressBar(pathname);
+			while (reader.ready()) {
+				int pos = this.tamHead + (this.nunReg * this.tamReg);
+				String line[] = reader.readLine().split(regex);
+				rFile.seek(pos);
+				rFile.writeUTF(this.limitString(line[0]));
+				pos += MAX_STRING;
+				for (int i = 1; i < line.length; i++) {
+					rFile.seek(pos);
+					rFile.writeInt(Integer.parseInt(line[i]));
+					pos += Integer.SIZE/8;
+				}
+				rFile.seek(pos);
+				rFile.writeInt(-1);
+				setNunReg(++cont);
+				progressBar.fill((cont*100)/quantReg);
+			}
+			progressBar.closeProgressBar();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 
 	private String limitString (String text) {
@@ -110,7 +174,7 @@ public class RegistroBinario {
 
 	private void setTamReg(int tamReg) {
 		try {
-			rFile.seek(Integer.SIZE / 8);
+			rFile.seek(Integer.SIZE/8);
 			this.tamReg = tamReg;
 			rFile.writeInt(this.tamReg);
 		} catch (IOException e) {
@@ -119,15 +183,31 @@ public class RegistroBinario {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void setTamHead(int tamHead) {
-		try {
-			rFile.seek((Integer.SIZE / 8) * 2);
-			this.tamHead = tamHead;
-			rFile.writeInt(this.tamHead);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public String getData(int key, String[] struct) {
+		if (key > this.nunReg-1 || key < 0 || this.nunReg == 0) {
+			return "A chave não existe.";
+		} else {
+			String txt = "";
+			try {
+				int pos = tamHead + (tamReg * key);
+				for (int i = 0; i < struct.length; i++) {
+					rFile.seek(pos);
+					if (struct[i].equals("int")) {
+						txt += rFile.readInt() + ";";
+						pos += Integer.SIZE/8;
+					} else if (struct[i].equals("float")) {
+						txt += rFile.readFloat() + ";";
+						pos += Float.SIZE/8;
+					} else if (struct[i].equals("String")) {
+						txt += rFile.readUTF() + ";";
+						pos += this.MAX_STRING;
+					}
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return txt.substring(0, txt.length()-1);
 		}
 	}
 
@@ -135,19 +215,26 @@ public class RegistroBinario {
 		if (key > this.nunReg-1 || key < 0 || this.nunReg == 0) {
 			return "A chave não existe.";
 		} else {
-			String txt = "";
 			try {
+				int data;
 				int pos = tamHead + (tamReg * key);
-				for (int i = 0; i < tamReg/30; i++) {
+				rFile.seek(pos);
+				String txt = rFile.readUTF();
+				pos += MAX_STRING;
+				for (int i = 1; i < (tamReg-MAX_STRING)/Integer.SIZE/8; i++) {
 					rFile.seek(pos);
-					txt += rFile.readUTF() + "; ";
-					pos += this.MAX_STRING;
+					if ((data = rFile.readInt()) == -1)
+						return txt;
+					txt += ";" + data;
+					pos += Integer.SIZE/8;
 				}
+				return txt;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return txt;
 		}
+		return "error";
 	}
+
 }

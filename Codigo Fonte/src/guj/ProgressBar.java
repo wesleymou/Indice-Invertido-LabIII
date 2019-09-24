@@ -13,9 +13,9 @@ public class ProgressBar extends JFrame {
     private JFrame f;
     private JProgressBar b; 
   
-    public void createProgressBar() { 
+    public void createProgressBar(String tittle) { 
     	
-        f = new JFrame("Progresso da indexação");  
+        f = new JFrame(tittle);  
         JPanel p = new JPanel(); 
         b = new JProgressBar(); 
   
