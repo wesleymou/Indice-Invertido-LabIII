@@ -71,6 +71,7 @@ public class RegistroBinario {
 		try {
 			rFile.close();
 		} catch (IOException e) {
+			e.printStackTrace();
 			return "Erro ao fechar o arquivo.";
 		}
 		return "Arquivo fechado.";
@@ -158,7 +159,7 @@ public class RegistroBinario {
 	}
 
 	private String limitString (String text) {
-		return text.length() <= MAX_STRING ? text : text.substring(0, MAX_STRING);
+		return text.length() > MAX_STRING ? text.substring(0, MAX_STRING-2) : text;
 	}
 
 	private void setNunReg(int nunReg) {
@@ -193,13 +194,16 @@ public class RegistroBinario {
 				for (int i = 0; i < struct.length; i++) {
 					rFile.seek(pos);
 					if (struct[i].equals("int")) {
-						txt += rFile.readInt() + ";";
+						int temp = rFile.readInt();
+						txt += String.valueOf(temp) + ";";
 						pos += Integer.SIZE/8;
 					} else if (struct[i].equals("float")) {
-						txt += rFile.readFloat() + ";";
+						float temp = rFile.readFloat();
+						txt += String.valueOf(temp) + ";";
 						pos += Float.SIZE/8;
 					} else if (struct[i].equals("String")) {
-						txt += rFile.readUTF() + ";";
+						String temp = rFile.readUTF();
+						txt += temp + ";";
 						pos += this.MAX_STRING;
 					}
 				}

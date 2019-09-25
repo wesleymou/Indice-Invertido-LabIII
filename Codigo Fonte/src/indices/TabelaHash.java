@@ -28,13 +28,15 @@ public class TabelaHash {
 
 	public void criarTabelaHash(String pathname, String regex) {
 		try (BufferedReader reader = new BufferedReader(new FileReader(pathname))) {
+			int cont = 0;
 			while (reader.ready()) {
 				String text[] = reader.readLine().split(regex);
 				Vector item = tableHash.get(funcaoHash(text[0]));
 				if (item.getTerm().equals("")) {
 					item.setTerm(text[0]);
+					item.setLine(cont++);
 				} else {
-					tableHash.add(new Vector(text[0]));
+					tableHash.add(new Vector(text[0],cont++));
 					item.setNext(this.lastItem++);
 				}
 			}
@@ -47,7 +49,7 @@ public class TabelaHash {
 	public void criarArquivoBinario(String pathname) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathname))){
 			for (Vector vector : tableHash) {
-				writer.write(vector.getTerm() + ";" + vector.getNext() + "\n");
+				writer.write(vector.getTerm() + ";" + vector.getLine() + ";" + vector.getNext() + "\n");
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -58,13 +60,16 @@ public class TabelaHash {
 
 class Vector {
 	private String term;
+	private int line;
 	private int next;
 
-	Vector (String term, int next) {
+	
+	Vector (String term, int line) {
 		this.term = term;
-		this.next = next;
+		this.line = line;
+		this.next = -1;
 	}
-
+	
 	Vector (String term) {
 		this.term = term;
 		this.next = -1;
@@ -76,6 +81,14 @@ class Vector {
 
 	public void setTerm(String term) {
 		this.term = term;
+	}
+
+	public int getLine() {
+		return line;
+	}
+
+	public void setLine(int line) {
+		this.line = line;
 	}
 
 	public int getNext() {

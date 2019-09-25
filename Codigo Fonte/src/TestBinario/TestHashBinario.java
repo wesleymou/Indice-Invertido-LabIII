@@ -12,13 +12,13 @@ import binario.RegistroBinario;
 
 class TestHashBinario {
 	
-	static String[] struct = {"String","int"};
+	static String[] struct = {"String","int","int"};
 	static RegistroBinario indiceHashBinario;
 
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
 		indiceHashBinario = new RegistroBinario("indice-hash.bin", struct, 30);
-		indiceHashBinario.fixedRegToBin("indice-hash.txt", struct, ";");
+//		indiceHashBinario.fixedRegToBin("indice-hash.txt", struct, ";");
 	}
 
 	@AfterAll
@@ -38,9 +38,9 @@ class TestHashBinario {
 	
 	@Test
 	void testGetData() {
-		assertEquals("bull;8249", indiceHashBinario.getData(0, struct));
-		assertEquals(";-1", indiceHashBinario.getData(1, struct));
-		assertEquals("vana;-1", indiceHashBinario.getData(3, struct));
+		assertEquals("bull;878;8249", indiceHashBinario.getData(0, struct));
+		assertEquals(";0;-1", indiceHashBinario.getData(1, struct));
+		assertEquals("vana;7882;-1", indiceHashBinario.getData(3, struct));
 		assertEquals("A chave não existe.", indiceHashBinario.getData(13000, struct));
 		assertEquals("A chave não existe.", indiceHashBinario.getData(-1, struct));
 	}
