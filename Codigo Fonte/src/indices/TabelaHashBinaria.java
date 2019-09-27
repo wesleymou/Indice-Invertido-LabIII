@@ -29,4 +29,8 @@ public class TabelaHashBinaria {
 			}
 		}
 	}
+	
+	public void close() {
+		hashBinario.close();
+	}
 }

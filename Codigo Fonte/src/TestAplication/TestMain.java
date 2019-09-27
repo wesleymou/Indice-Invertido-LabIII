@@ -2,6 +2,10 @@ package TestAplication;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,21 +32,32 @@ class TestMain {
 
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
-		//		indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-		//		indice.toFile("indice-invertido.txt");
-		//		indiceHash = new TabelaHash(8009);
-		//		indiceHash.criarArquivoBinario("indice-hash.txt");
+		new File("indice-invertido.txt").delete();
+		new File("indice-hash.txt").delete();
+		
+		indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+		indice.toFile("indice-invertido.txt");
+		indiceHash = new TabelaHash(8009);
+		indiceHash.criarArquivoBinario("indice-hash.txt");
 
+		new File("banco.bin").delete();
+		new File("indice-invertido.bin").delete();
+		new File("indice-hash.bin").delete();
+		
 		bancoBinario = new RegistroBinario("banco.bin", structBanco, 30);
-//				bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-
+		bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+		bancoBinario.close();
+		bancoBinario = null;
+		
 		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 30);
-//				indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
-
-//		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 30);
-//				indiceHashBinario.fixedRegToBin("indice-hash.txt", structHash, ";");
-
-		hashBinaria = new TabelaHashBinaria(8009);
+		indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
+		indiceBinario.close();
+		indiceBinario = null;
+		
+		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 30);
+		indiceHashBinario.fixedRegToBin("indice-hash.txt", structHash, ";");
+		indiceHashBinario.close();
+		indiceHashBinario = null;
 	}
 
 	@AfterAll
@@ -51,14 +66,22 @@ class TestMain {
 
 	@BeforeEach
 	void setUp() throws Exception {
+		bancoBinario = new RegistroBinario("banco.bin", structBanco, 30);
+		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 30);
+		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 30);
+		hashBinaria = new TabelaHashBinaria(8009);
 	}
 
 	@AfterEach
 	void tearDown() throws Exception {
+		bancoBinario.close();
+		indiceBinario.close();
+		indiceHashBinario.close();
+		hashBinaria.close();
 	}
 
 	@Test
-	void testBusca01() {
+	void testBHashParaIndice() {
 		assertEquals(0, hashBinaria.getData("aaa"));
 		assertEquals(1, hashBinaria.getData("abaddon"));
 		assertEquals(2, hashBinaria.getData("abarenbou"));
@@ -67,43 +90,124 @@ class TestMain {
 	}
 
 	@Test
-	void testBusca02() {
-		String stringTest = "adventure";
-		int index = hashBinaria.getData(stringTest);
-		String line[] = indiceBinario.getData(index).split(";");
-		assertEquals(line[0], stringTest);
+	void testIndiceCorrespondeAChave() {
+		String stringChave = "adventure";
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		assertEquals(index[0], stringChave);
 	}
 
 	@Test
-	void testBusca03() {
+	void testRegistroDoBancoContemAPalavraChave() {
+		String stringChave = "mario";
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		for (int i = 1; i < index.length; i++) {
+			String data = bancoBinario.getData(Integer.parseInt(index[i]), structBanco);
+			assertTrue(data.toLowerCase().contains(stringChave));
+		}
+	}
+
+	@Test
+	void testTamanhoLinhaIndiceBinario() {
+		String texto = "";
+		String stringChave = "mario";
+		try (BufferedReader leitor = new BufferedReader(new FileReader("indice-invertido.txt"))){
+			while (leitor.ready()) {
+				if ((texto = leitor.readLine()).split(";")[0].equals(stringChave))
+					break;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		assertEquals(texto.split(";").length, index.length);
+	}
+	
+	@Test
+	void testTamanhoLinhaIndiceBinario_03() {
+		String texto = "";
+		String stringChave = "adventure";
+		try (BufferedReader leitor = new BufferedReader(new FileReader("indice-invertido.txt"))){
+			while (leitor.ready()) {
+				if ((texto = leitor.readLine()).split(";")[0].equals(stringChave))
+					break;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		assertEquals(texto.split(";").length, index.length);
+	}
+
+	@Test
+	void testQuantidadeCamposBancoBinario() {
 		String stringTest = "mario";
 		int index = hashBinaria.getData(stringTest);
 		String line[] = indiceBinario.getData(index).split(";");
+		assertEquals(line[0], stringTest);
 		for (int i = 1; i < line.length; i++) {
-			String data = bancoBinario.getData(Integer.parseInt(line[i]), structBanco);
-			assertTrue(data.toLowerCase().contains(line[0]));
+			int temp = bancoBinario.getData(Integer.parseInt(line[i]), structBanco).split(";").length;
+			int aux = structBanco.length;
+			assertEquals(aux, temp);
+		}
+	}
+	
+	@Test
+	void testRegistroDoBancoContemAPalavraChave_02() {
+		String stringChave = "zumba";
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		for (int i = 1; i < index.length; i++) {
+			String data = bancoBinario.getData(Integer.parseInt(index[i]), structBanco);
+			assertTrue(data.toLowerCase().contains(stringChave));
 		}
 	}
 
 	@Test
-	void testBusca04() {
-		String stringTest = "adventure";
-		int index = hashBinaria.getData(stringTest);
-		String line[] = indiceBinario.getData(index).split(";");
-		assertEquals(line[0], stringTest);
-		for (int i = 1; i < line.length; i++) {
-			System.out.println(bancoBinario.getData(Integer.parseInt(line[i]), structBanco));
+	void testRegistroDoBancoContemAPalavraChave_03() {
+		String stringChave = "zyuden";
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		for (int i = 1; i < index.length; i++) {
+			String data = bancoBinario.getData(Integer.parseInt(index[i]), structBanco);
+			assertTrue(data.toLowerCase().contains(stringChave));
 		}
 	}
 
 	@Test
-	void testBusca05() {
-		String stringTest = "abarenbou";
-		int index = hashBinaria.getData(stringTest);
-		String line[] = indiceBinario.getData(index).split(";");
-		assertEquals(line[0], stringTest);
-		for (int i = 1; i < line.length; i++) {
-			assertEquals(structBanco.length, bancoBinario.getData(Integer.parseInt(line[i]), structBanco));
+	void testTamanhoLinhaIndiceBinario_02() {
+		String texto = "";
+		String stringChave = "zone";
+		try (BufferedReader leitor = new BufferedReader(new FileReader("indice-invertido.txt"))){
+			while (leitor.ready()) {
+				if ((texto = leitor.readLine()).split(";")[0].equals(stringChave))
+					break;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		assertEquals(texto.split(";").length, index.length);
+	}
+	
+	@Test
+	void testTamanhoLinhaIndiceBinario_04() {
+		String texto = "";
+		String stringChave = "the";
+		try (BufferedReader leitor = new BufferedReader(new FileReader("indice-invertido.txt"))){
+			while (leitor.ready()) {
+				if ((texto = leitor.readLine()).split(";")[0].equals(stringChave))
+					break;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		int key = hashBinaria.getData(stringChave);
+		String index[] = indiceBinario.getData(key).split(";");
+		assertEquals(texto.split(";").length, index.length);
 	}
 }

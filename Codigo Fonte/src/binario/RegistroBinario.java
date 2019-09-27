@@ -144,7 +144,10 @@ public class RegistroBinario {
 				pos += MAX_STRING;
 				for (int i = 1; i < line.length; i++) {
 					rFile.seek(pos);
-					rFile.writeInt(Integer.parseInt(line[i]));
+					if (line[i] == null)
+						rFile.writeInt(-1);
+					else
+						rFile.writeInt(Integer.parseInt(line[i]));
 					pos += Integer.SIZE/8;
 				}
 				rFile.seek(pos);
@@ -159,7 +162,7 @@ public class RegistroBinario {
 	}
 
 	private String limitString (String text) {
-		return text.length() > MAX_STRING ? text.substring(0, MAX_STRING-2) : text;
+		return text.length() > MAX_STRING-2 ? text.substring(0, MAX_STRING-2) : text;
 	}
 
 	private void setNunReg(int nunReg) {
