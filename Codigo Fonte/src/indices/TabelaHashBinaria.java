@@ -7,8 +7,8 @@ public class TabelaHashBinaria {
 	RegistroBinario hashBinario;
 	private int factorHash;
 
-	public TabelaHashBinaria(int factorHash) {
-		hashBinario = new RegistroBinario("indice-hash.bin", struct, 30);
+	public TabelaHashBinaria(String pathname, int factorHash) {
+		hashBinario = new RegistroBinario(pathname, struct, 30);
 		this.factorHash = factorHash;
 	}
 

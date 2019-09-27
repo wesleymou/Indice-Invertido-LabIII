@@ -12,14 +12,14 @@ public class TabelaHash {
 	private int factorHash;
 	private int lastItem;
 
-	public TabelaHash(int factorHash) {
+	public TabelaHash(String pathname, int factorHash) {
 		this.tableHash = new ArrayList<Vector>();
 		this.factorHash = factorHash;
 		this.lastItem = factorHash;
 		for (int i = 0; i < factorHash; i++) {
 			tableHash.add(new Vector(""));
 		}
-		this.criarTabelaHash("indice-invertido.txt", ";");
+		this.criarTabelaHash(pathname, ";");
 	}
 
 	private int funcaoHash (String key) {
@@ -46,7 +46,7 @@ public class TabelaHash {
 		}
 	}
 	
-	public void criarArquivoBinario(String pathname) {
+	public void criarArquivo(String pathname) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(pathname))){
 			for (Vector vector : tableHash) {
 				writer.write(vector.getTerm() + ";" + vector.getLine() + ";" + vector.getNext() + "\n");

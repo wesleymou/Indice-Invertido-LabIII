@@ -36,9 +36,9 @@ public class RegistroBinario {
 				if (struct != null) {
 					for (String word: struct) {
 						if (word.equals("int")) {
-							cont += Integer.SIZE/8;
+							cont += Integer.BYTES;
 						} else if (word.equals("float")) {
-							cont += Float.SIZE/8;
+							cont += Float.BYTES;
 						}else if (word.equals("String")) {
 							cont += maxString;
 						}
@@ -47,8 +47,7 @@ public class RegistroBinario {
 
 				this.nunReg = 0;
 				tempTamReg = cont;
-				tempTamHead = 4 * Integer.SIZE/8;
-				maxString = 30;
+				tempTamHead = 4 * Integer.BYTES;
 
 				rFile.writeInt(this.nunReg);
 				rFile.writeInt(tempTamReg);
@@ -91,10 +90,10 @@ public class RegistroBinario {
 					rFile.seek(pos);
 					if (struct[i].equals("int")) {
 						rFile.writeInt(Integer.parseInt(line[i]));
-						pos += Integer.SIZE/8;
+						pos += Integer.BYTES;
 					} else if (struct[i].equals("float")) {
 						rFile.writeFloat(Float.parseFloat(line[i]));
-						pos += Float.SIZE/8;
+						pos += Float.BYTES;
 					} else if (struct[i].equals("String")) {
 						rFile.writeUTF(this.limitString(line[i]));
 						pos += this.MAX_STRING;
@@ -118,11 +117,11 @@ public class RegistroBinario {
 		if (this.tamReg == 0) {
 			try (BufferedReader reader = new BufferedReader(new FileReader(pathname))) {
 				while (reader.ready()) {
-					String string[] = reader.readLine().split(regex);
-					if (string.length > cont)
-						cont = string.length;
+					int x = reader.readLine().split(regex).length;
+					if (x > cont)
+						cont = x;
 				}
-				setTamReg(((cont) * Integer.SIZE/8) + MAX_STRING);
+				setTamReg(((cont) * Integer.BYTES) + MAX_STRING);
 			} catch (FileNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -135,20 +134,17 @@ public class RegistroBinario {
 		try (BufferedReader reader = new BufferedReader(new FileReader(pathname))){
 			ProgressBar progressBar = new ProgressBar();
 			cont = 0;
-			progressBar.createProgressBar(pathname);
+			progressBar.createProgressBar(pathname + "to Bin");
 			while (reader.ready()) {
-				int pos = this.tamHead + (this.nunReg * this.tamReg);
-				String line[] = reader.readLine().split(regex);
+				int pos = this.tamHead + (this.tamReg * this.nunReg);
 				rFile.seek(pos);
+				String line[] = reader.readLine().split(regex);
 				rFile.writeUTF(this.limitString(line[0]));
 				pos += MAX_STRING;
 				for (int i = 1; i < line.length; i++) {
 					rFile.seek(pos);
-					if (line[i] == null)
-						rFile.writeInt(-1);
-					else
-						rFile.writeInt(Integer.parseInt(line[i]));
-					pos += Integer.SIZE/8;
+					rFile.writeInt(Integer.parseInt(line[i]));
+					pos += Integer.BYTES;
 				}
 				rFile.seek(pos);
 				rFile.writeInt(-1);
@@ -178,7 +174,7 @@ public class RegistroBinario {
 
 	private void setTamReg(int tamReg) {
 		try {
-			rFile.seek(Integer.SIZE/8);
+			rFile.seek(Integer.BYTES);
 			this.tamReg = tamReg;
 			rFile.writeInt(this.tamReg);
 		} catch (IOException e) {
@@ -199,11 +195,11 @@ public class RegistroBinario {
 					if (struct[i].equals("int")) {
 						int temp = rFile.readInt();
 						txt += String.valueOf(temp) + ";";
-						pos += Integer.SIZE/8;
+						pos += Integer.BYTES;
 					} else if (struct[i].equals("float")) {
 						float temp = rFile.readFloat();
 						txt += String.valueOf(temp) + ";";
-						pos += Float.SIZE/8;
+						pos += Float.BYTES;
 					} else if (struct[i].equals("String")) {
 						String temp = rFile.readUTF();
 						txt += temp + ";";
@@ -224,16 +220,16 @@ public class RegistroBinario {
 		} else {
 			try {
 				int data;
-				int pos = tamHead + (tamReg * key);
+				int pos = this.tamHead + (this.tamReg * key);
 				rFile.seek(pos);
 				String txt = rFile.readUTF();
 				pos += MAX_STRING;
-				for (int i = 1; i < (tamReg-MAX_STRING)/Integer.SIZE/8; i++) {
+				for (int i = 1; i < ((tamReg-MAX_STRING)/Integer.BYTES); i++) {
 					rFile.seek(pos);
 					if ((data = rFile.readInt()) == -1)
 						return txt;
 					txt += ";" + data;
-					pos += Integer.SIZE/8;
+					pos += Integer.BYTES;
 				}
 				return txt;
 			} catch (IOException e) {

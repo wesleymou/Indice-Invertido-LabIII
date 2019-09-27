@@ -16,6 +16,7 @@ import binario.RegistroBinario;
 import indices.IndiceInvertido;
 import indices.TabelaHash;
 import indices.TabelaHashBinaria;
+import util.MaiorRegistro;
 
 class TestMain {
 
@@ -32,32 +33,32 @@ class TestMain {
 
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
-		new File("indice-invertido.txt").delete();
-		new File("indice-hash.txt").delete();
-		
-		indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-		indice.toFile("indice-invertido.txt");
-		indiceHash = new TabelaHash(8009);
-		indiceHash.criarArquivoBinario("indice-hash.txt");
+//		new File("indice-invertido.txt").delete();
+//		new File("indice-hash.txt").delete();
+//		
+//		indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+//		indice.toFile("indice-invertido.txt");
+//		indiceHash = new TabelaHash("indice-invertido.txt" ,6373);
+//		indiceHash.criarArquivo("indice-hash.txt");
 
-		new File("banco.bin").delete();
-		new File("indice-invertido.bin").delete();
-		new File("indice-hash.bin").delete();
-		
-		bancoBinario = new RegistroBinario("banco.bin", structBanco, 30);
-		bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-		bancoBinario.close();
-		bancoBinario = null;
-		
-		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 30);
-		indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
-		indiceBinario.close();
-		indiceBinario = null;
-		
-		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 30);
-		indiceHashBinario.fixedRegToBin("indice-hash.txt", structHash, ";");
-		indiceHashBinario.close();
-		indiceHashBinario = null;
+//		new File("banco.bin").delete();
+//		new File("indice-invertido.bin").delete();
+//		new File("indice-hash.bin").delete();
+//		
+//		bancoBinario = new RegistroBinario("banco.bin", structBanco, 60);
+//		bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+//		bancoBinario.close();
+//		bancoBinario = null;
+//		
+//		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);
+//		indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
+//		indiceBinario.close();
+//		indiceBinario = null;
+//		
+//		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 60);
+//		indiceHashBinario.fixedRegToBin("indice-hash.txt", structHash, ";");
+//		indiceHashBinario.close();
+//		indiceHashBinario = null;
 	}
 
 	@AfterAll
@@ -66,10 +67,10 @@ class TestMain {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		bancoBinario = new RegistroBinario("banco.bin", structBanco, 30);
-		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 30);
-		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 30);
-		hashBinaria = new TabelaHashBinaria(8009);
+		bancoBinario = new RegistroBinario("banco.bin", structBanco, 60);
+		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);
+		indiceHashBinario = new RegistroBinario("indice-hash.bin", structHash, 60);
+		hashBinaria = new TabelaHashBinaria("indice-hash.bin", 6373);
 	}
 
 	@AfterEach
@@ -190,6 +191,7 @@ class TestMain {
 			// TODO: handle exception
 		}
 		int key = hashBinaria.getData(stringChave);
+		System.out.println(indiceBinario.getData(key));
 		String index[] = indiceBinario.getData(key).split(";");
 		assertEquals(texto.split(";").length, index.length);
 	}
@@ -197,7 +199,7 @@ class TestMain {
 	@Test
 	void testTamanhoLinhaIndiceBinario_04() {
 		String texto = "";
-		String stringChave = "the";
+		String stringChave = "world";
 		try (BufferedReader leitor = new BufferedReader(new FileReader("indice-invertido.txt"))){
 			while (leitor.ready()) {
 				if ((texto = leitor.readLine()).split(";")[0].equals(stringChave))

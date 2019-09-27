@@ -16,7 +16,7 @@ class TestTabelaHashBinaria {
 	
 	@BeforeAll
 	static void setUpBeforeClass() throws Exception {
-		hashBinaria = new TabelaHashBinaria(8009);
+		hashBinaria = new TabelaHashBinaria("files/indice-hash.bin" ,8009);
 	}
 
 	@AfterAll
