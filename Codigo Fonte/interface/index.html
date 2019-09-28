@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Index</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/datatables.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row mt-5">
+            <div class="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6">
+                <div class="row">
+                    <div class="col">
+                        <div class="input-group mb-3">
+                            <input id="palavra" type="text" class="form-control" placeholder="Recipient's username"
+                                aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" id="button" type="button">Button</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <table class="table" id="table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Platform</th>
+                                    <th>Year</th>
+                                    <th>Genre</th>
+                                    <th>Publisher</th>
+                                    <th>NA_Sales</th>
+                                    <th>EU_Sales</th>
+                                    <th>JP_Sales</th>
+                                    <th>Other_Sales</th>
+                                    <th>Global_Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-data">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <script src="js/jquery.js"></script>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script src="js/datatables.min.js"></script>
+        <script src="js/script.js"></script>
+
+        <script>
+            $("#button").click(() => fazAi("#table-data", "/fazai", $("#palavra").html, alert("Erro na requisição")));
+        </script>
+    </footer>
+</body>
+
+</html>
