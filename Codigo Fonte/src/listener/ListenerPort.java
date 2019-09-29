@@ -31,6 +31,7 @@ public class ListenerPort implements Container {
 		try {
 			String path = request.getPath().getPath();
 			System.out.println("Request: " + request.getQuery().toString());
+			System.out.println(path.toString());
 
 			if (path.startsWith("/fazai")/* && "POST".equals(method)*/) {
 				JSONArray json = fazAi.fazONegocio(request.getQuery().get("key"));
