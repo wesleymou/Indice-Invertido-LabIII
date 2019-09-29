@@ -1,6 +1,6 @@
 //Variaveis Globais
 var serverAddress = "localhost";
-var port = 4000;
+var port = ":1880";
 
 //Listeners ----------------------------------------------------------------------------
 document.addEventListener("wheel", () => {}, {
@@ -34,19 +34,21 @@ function sendRequest(path, dados, err) {
         err.apply(this);
       }
     };
-    xmlhttp.open("POST", serverAddress + path, true);
-    xmlhttp.setRequestHeader(
-      "Content-Type",
-      "application/x-www-form-urlencoded"
-    );
+    xmlhttp.open("POST", path, true);
+
+    xmlhttp.setRequestHeader("Access-Control-Allow-Origin", "*");
+    xmlhttp.setRequestHeader("Access-Control-Allow-Methods", "POST");
+    xmlhttp.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    xmlhttp.setRequestHeader("Content-Type", "x-www-form-urlencoded");
     xmlhttp.send(dados);
   });
 }
 
 function fazAi(tableId, path, dados, err) {
-  sendRequest(path, dados, err).then(res => {
+  sendRequest(serverAddress + port + path, dados, err).then(res => {
     res.array.forEach(line => {
-      $("#table-data").append(`
+      $(tableId).append(`
         <tr>
           <td>${line[0]}</td>
           <td>${line[1]}</td>

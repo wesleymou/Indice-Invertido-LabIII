@@ -19,10 +19,9 @@
                 <div class="row">
                     <div class="col">
                         <div class="input-group mb-3">
-                            <input id="palavra" type="text" class="form-control" placeholder="Recipient's username"
-                                aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <input id="key" type="text" class="form-control" required>
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" id="button" type="button">Button</button>
+                                <button class="btn btn-outline-secondary" id="button" type="button">Pesquisar</button>
                             </div>
                         </div>
                     </div>
@@ -62,7 +61,7 @@
         <script src="js/script.js"></script>
 
         <script>
-            $("#button").click(() => fazAi("#table-data", "/fazai", $("#palavra").html, alert("Erro na requisição")));
+            $("#button").click(() => fazAi("#table-data", "/fazai", "key%3D"+$("#key").serialize(), () => alert("Erro na requisição")));
         </script>
     </footer>
 </body>

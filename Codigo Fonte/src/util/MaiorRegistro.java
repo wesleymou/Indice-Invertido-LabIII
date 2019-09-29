@@ -11,7 +11,7 @@ public class MaiorRegistro {
 	public MaiorRegistro() {
 	}
 	
-	public void fazAí(String pathname, String regex) {
+	public void maiorRegistro(String pathname, String regex) {
 		try (BufferedReader leitor = new BufferedReader(new FileReader(pathname))){
 			Set<Auxiliar> lista = new TreeSet<Auxiliar>(new TreeComparator());
 			while (leitor.ready()) {
