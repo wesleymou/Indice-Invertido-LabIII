@@ -36,19 +36,15 @@ function sendRequest(path, dados, err) {
     };
 
     xmlhttp.open("POST", path, true);
-
-    xmlhttp.setRequestHeader("Access-Control-Allow-Origin", "*");
-    xmlhttp.setRequestHeader("Access-Control-Allow-Methods", "POST");
-    xmlhttp.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
-    xmlhttp.setRequestHeader("Content-Type", "x-www-form-urlencoded");
-
+    xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xmlhttp.send(dados);
   });
 }
 
 function fazAi(tableId, path, dados, err) {
   sendRequest(serverAddress + port + path, dados, err).then(res => {
-    res.array.forEach(line => {
+    $(tableId).html("");
+    res.forEach(line => {
       $(tableId).append(`
         <tr>
           <td>${line[0]}</td>

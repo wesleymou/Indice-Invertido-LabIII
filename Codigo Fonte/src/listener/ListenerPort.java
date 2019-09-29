@@ -1,15 +1,12 @@
 package listener;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
 import java.util.Scanner;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 import org.simpleframework.http.Status;
