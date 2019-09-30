@@ -1,9 +1,13 @@
 package listener;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 import org.json.JSONArray;
@@ -60,7 +64,7 @@ public class ListenerPort implements Container {
 	}
 
 	public static void main(String[] list) throws Exception {
-
+		new FazAi().recompilar();
 		int porta = 1880;
 
 		// Configura uma conexão soquete para o servidor HTTP.
@@ -70,7 +74,7 @@ public class ListenerPort implements Container {
 		SocketAddress endereco = new InetSocketAddress(porta);
 		conexao.connect(endereco);
 
-		//		Desktop.getDesktop().browse(new URI("https://pucweb-wesley-mouraria.azurewebsites.net/"));
+		Desktop.getDesktop().browse(new File("interface/index.html").toURI());
 
 		System.out.println("Interromper o servidor? (y/n)");
 
@@ -79,9 +83,11 @@ public class ListenerPort implements Container {
 		while (!a.equals("y")) {
 			a = ler.next();
 			if (a.equals("n"))
-				System.out.println("Ent�o n�o.");
+				System.out.println("Então não.");
+			else if (a.equals("recompilar"))
+				new FazAi().recompilar();
 			else if (!a.equals("y") && !a.equals("n"))
-				System.out.println("Sem tempo irm�o.");
+				System.out.println("Sem tempo irmão.");
 		}
 		ler.close();
 		conexao.close();
@@ -108,7 +114,7 @@ class FazAi {
 	public JSONArray fazONegocio(String keyString) {
 		JSONArray json = new JSONArray();
 		String[] line = indiceBinario.getData(
-				hashBinario.getData(keyString)
+				hashBinario.getData(keyString.toLowerCase())
 					).split(";");
 		for (int i = 1; i < line.length; i++) {
 			String[] reg = bancoBinario.getData(Integer.parseInt(line[i]), structBanco).split(";");
@@ -117,19 +123,27 @@ class FazAi {
 		return json;
 	}
 
-	public void recompilar () {
-		new File("indice-invertido.txt").delete();
-		new File("indice-hash.txt").delete();
+	public void recompilar () throws IOException {
+//		new File("indice-invertido.txt").delete();
+//		new File("indice-hash.txt").delete();
+//		Files.delete(Paths.get("indice-invertido.txt"));
+//		Files.delete(Paths.get("indice-hash.txt"));
+//
+//		IndiceInvertido indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+//		indice.toFile("indice-invertido.txt");
+//		TabelaHash indiceHash = new TabelaHash("indice-invertido.txt" ,6373);
+//		indiceHash.criarArquivo("indice-hash.txt");
+		
+		bancoBinario.close();
+		
+		Files.delete(Paths.get("banco.bin"));
+		Files.delete(Paths.get("indice-invertido.bin"));
+		Files.delete(Paths.get("indice-hash.bin"));
 
-		IndiceInvertido indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-		indice.toFile("indice-invertido.txt");
-		TabelaHash indiceHash = new TabelaHash("indice-invertido.txt" ,6373);
-		indiceHash.criarArquivo("indice-hash.txt");
-
-		new File("banco.bin").delete();
-		new File("indice-invertido.bin").delete();
-		new File("indice-hash.bin").delete();
-
+		bancoBinario = new RegistroBinario("banco.bin", structBanco, 60);
+		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);;
+		hashBinario = new TabelaHashBinaria("indice-hash.bin", 6373);
+		
 		bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
 		indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
 
