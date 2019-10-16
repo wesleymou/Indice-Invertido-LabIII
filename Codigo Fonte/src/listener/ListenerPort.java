@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.LinkedHashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.simpleframework.http.Request;
@@ -20,21 +20,21 @@ import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
 import binario.RegistroBinario;
-import indices.IndiceInvertido;
 import indices.TabelaHash;
 import indices.TabelaHashBinaria;
 
 public class ListenerPort implements Container {
-	
-	FazAi fazAi = new FazAi();
-	
+
+	static FazAi fazAi = new FazAi();
+
+	@Override
 	public void handle(Request request, Response response) {
 		try {
 			String path = request.getPath().getPath();
 			System.out.println("Request: " + request.getQuery().toString());
 			System.out.println(path.toString());
 
-			if (path.startsWith("/fazai")/* && "POST".equals(method)*/) {
+			if (path.startsWith("/fazai")/* && "POST".equals(method) */) {
 				JSONArray json = fazAi.fazONegocio(request.getQuery().get("key"));
 				this.enviaResposta(Status.CREATED, response, json);
 
@@ -64,7 +64,7 @@ public class ListenerPort implements Container {
 	}
 
 	public static void main(String[] list) throws Exception {
-		new FazAi().recompilar();
+		// new FazAi().recompilar();
 		int porta = 1880;
 
 		// Configura uma conexão soquete para o servidor HTTP.
@@ -90,6 +90,7 @@ public class ListenerPort implements Container {
 				System.out.println("Sem tempo irmão.");
 		}
 		ler.close();
+		fazAi.close();
 		conexao.close();
 		servidor.stop();
 		System.out.println("Servidor terminado.");
@@ -102,48 +103,51 @@ class FazAi {
 	RegistroBinario indiceBinario;
 	TabelaHashBinaria hashBinario;
 
-	private static String[] structBanco = {"int","String","String","String","String","String","float","float","float","float","float"};
-	private static String[] structHash = {"String","int","int"};
+	private static String[] structBanco = { "int", "String", "String", "String", "String", "String", "float", "float",
+			"float", "float", "float" };
+	private static String[] structHash = { "String", "int", "int" };
 
 	public FazAi() {
 		bancoBinario = new RegistroBinario("banco.bin", structBanco, 60);
-		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);;
+		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);
+		;
 		hashBinario = new TabelaHashBinaria("indice-hash.bin", 6373);
 	}
 
 	public JSONArray fazONegocio(String keyString) {
-		JSONArray json = new JSONArray();
-		String[] line = indiceBinario.getData(
-				hashBinario.getData(keyString.toLowerCase())
-					).split(";");
-		for (int i = 1; i < line.length; i++) {
-			String[] reg = bancoBinario.getData(Integer.parseInt(line[i]), structBanco).split(";");
-			json.put(reg);
+		Set<String[]> hashSet = new LinkedHashSet<String[]>();
+		String[] keyStrings = keyString.split("[^A-Za-z]");
+		for (String keyString2 : keyStrings) {
+			String[] line = indiceBinario.getData(hashBinario.getData(keyString2.toLowerCase())).split(";");
+			for (int i = 1; i < line.length; i++) {
+				String[] reg = bancoBinario.getData(Integer.parseInt(line[i]), structBanco).split(";");
+				hashSet.add(reg);
+			}
 		}
-		return json;
+		return new JSONArray(hashSet);
 	}
 
-	public void recompilar () throws IOException {
-//		new File("indice-invertido.txt").delete();
-//		new File("indice-hash.txt").delete();
-//		Files.delete(Paths.get("indice-invertido.txt"));
-//		Files.delete(Paths.get("indice-hash.txt"));
-//
-//		IndiceInvertido indice = new IndiceInvertido("banco.csv", 1, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
-//		indice.toFile("indice-invertido.txt");
-//		TabelaHash indiceHash = new TabelaHash("indice-invertido.txt" ,6373);
-//		indiceHash.criarArquivo("indice-hash.txt");
-		
+	public void recompilar() throws IOException {
+		// Files.delete(Paths.get("indice-invertido.txt"));
+		// Files.delete(Paths.get("indice-hash.txt"));
+		//
+		// IndiceInvertido indice = new IndiceInvertido("banco.csv", 1,
+		// ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+		// indice.toFile("indice-invertido.txt");
+		TabelaHash indiceHash = new TabelaHash("indice-invertido.txt", 6373);
+		indiceHash.criarArquivo("indice-hash.txt");
+
 		bancoBinario.close();
-		
-		Files.delete(Paths.get("banco.bin"));
-		Files.delete(Paths.get("indice-invertido.bin"));
-		Files.delete(Paths.get("indice-hash.bin"));
+
+		// Files.delete(Paths.get("banco.bin"));
+		// Files.delete(Paths.get("indice-invertido.bin"));
+		// Files.delete(Paths.get("indice-hash.bin"));
 
 		bancoBinario = new RegistroBinario("banco.bin", structBanco, 60);
-		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);;
+		indiceBinario = new RegistroBinario("indice-invertido.bin", null, 60);
+		;
 		hashBinario = new TabelaHashBinaria("indice-hash.bin", 6373);
-		
+
 		bancoBinario.fixedRegToBin("banco.csv", structBanco, ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
 		indiceBinario.variableRegToBin("indice-invertido.txt", ";", 8400);
 

@@ -35,7 +35,13 @@ public class TabelaHash {
 				if (item.getTerm().equals("")) {
 					item.setTerm(text[0]);
 					item.setLine(cont++);
-				} else {
+				} else if (item.getNext() != -1){
+					while (item.getNext() != -1) {
+						item = tableHash.get(item.getNext());
+					}
+					tableHash.add(new Vector(text[0],cont++));
+					item.setNext(this.lastItem++);
+				}else {
 					tableHash.add(new Vector(text[0],cont++));
 					item.setNext(this.lastItem++);
 				}
